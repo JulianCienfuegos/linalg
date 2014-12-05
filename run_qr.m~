@@ -1,0 +1,11 @@
+dim = 5;
+perm=(dim:-1:1)
+A = rand(dim);
+m = 5; % number of iterations.
+qrplt(A, m);
+A=A(perm, perm)
+disp(A);
+qrplt(A, m);
+A=A(perm, perm)
+qrplt(A, m);
+A=A(perm, perm)
