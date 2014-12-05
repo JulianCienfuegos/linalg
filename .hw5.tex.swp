@@ -298,7 +298,139 @@ Iterated and Flipped A:
 \end{lstlisting}
 \end{center}
 \emph{What do you get asymptotically?}\\
+The diagonal elements go to the eigenvalues of A. The error goes to zero. Therefore the logarithm goes to negative infinity. There is no asymptotic behavior. Below are my code and a graph.
+\begin{center}
+\textbf{qrplt.m}
+\begin{lstlisting}
+function [a, err] = qrplt(a, m)
+    hold off
+    e=diag(a);
+    for i=1:m,
+       [q,r]=qr(a);dd=diag(sign(diag(r)));r=dd*r;q=q*dd;a=r*q; ...
+       e=[e,diag(a)];
+    end
+    clf
+    plot(e','k'),grid
+    title('plot of each diagonal matrix entry during QR iteration')
+    shg
+    [~,c] = size(e);
+    err = zeros((c-2), 1); 
+    length(err)
+    for col = 2:(c-1)
+        err(col-1) = norm(e(:,m) - e(:,col))/norm(e(:,m));
+    end
+    length(err)
+end	 	
+\end{lstlisting}
+\textbf{run\_qrplt.m}
+\begin{lstlisting}
+dim = 30;
+A = rand(dim); A = A'*A;
+m=1000;
+[A,err] = qrplt(A,m);
+plot(1:(m-1), log(err))
+\end{lstlisting}
+\begin{figure}
+\centering
+\includegraphics[width=0.5\textwidth]{noasymptote.jpg}
+\caption{No Asymptote}
+\end{figure}
+\end{center}
 \item Algorithm 5.2\\
+\begin{center}
+\textbf{dc\_eig.py}
+\begin{lstlisting}
+from numpy import array, zeros, ones, outer,  linspace, diag, dot, copy
+from numpy import concatenate, finfo, multiply
+from scipy.optimize import fsolve
+from numpy.linalg import norm, eig
+from scipy.linalg import block_diag 
+
+def MakeTridiagonalMatrix(main, offset_one):
+	"""This function will make a tridiagonal 2D array (NOT a matrix)
+	which has the main array on its main diagonal and the offset_one 
+	array on its super and sub diagonals.
+	"""
+	return diag(main) + diag(offset_one, k = -1) + diag(offset_one, k = 1)
+	
+def dc_eig(T):
+	""" This function is a Python implementation of Dr. G. Hiary's 
+	divide and conquer algorithm.
+	"""
+	eps = finfo(float).eps
+	(n,m) = T.shape
+	print n, m
+	print n
+	if(n==1):
+		Q = array([1])
+		L = T
+		return Q, L
+	else:
+		m = n/2
+		v = zeros(n)
+		v[m-1:m+1] = 1
+		rho = T[m-1][m]
+		R = rho*outer(v,v)
+		TT = T - R
+		T1 = TT[0:m, 0:m]
+		T2 = TT[m:, m:]
+		(Q1, L1) = dc_eig(T1)
+		(Q2, L2) = dc_eig(T2)
+		
+		D = block_diag(L1, L2)
+		QQ = block_diag(Q1.T, Q2.T)
+		u=dot(QQ,v)
+
+		f = lambda x: 1 + rho*dot((multiply(u, 1/(diag(D)-x))),u)
+		Ds = copy(diag(D)) # make a deep copy of the diag
+		# sort now, otherwise the diagonal would be sorted in place
+		Ds.sort()
+		# reverse the list
+		Ds[:] = Ds[::-1] 
+		L = zeros((n,n))
+		
+		if(rho > 0):
+			for i in range(0,n-1): 
+				# Because Python is crazy, this will only go up to n-2.
+				I = array([Ds[i+1]+eps, Ds[i] - eps])
+				L[i+1][i+1] = fsolve(f, I)
+			x0 = Ds[1] + epsgit
+			if( f(x0) > 0):
+				print 'Error 1 : cannot resolve zero of f'
+				return
+			x1 = x0
+			while (f(x1) < 0):
+				x1 = x1 + 0.1			
+			L[0][0] = fsolve(f, array([x0, x1]))
+		else:
+			for i in range(0,n-1):
+				I = array([Ds[i+1]+eps, Ds[i] - eps])
+				L[i][i] = fsolve(f, I)
+			x0 = Ds[n] - eps
+			if(f(x0) > 0):
+				print('Error 2: cannot resolve zero of f')
+				return
+			x1 = x0
+			while (f(x1) < 0):
+				x1 = x1 - 0.1
+			L[n][n] = fsolve(f, array([x1, x0]))
+		Qprime = full((n, n), nan)
+		for i in range (0, n):
+			alpha = L[i][i]
+			qi = u/(diag(D) - alpha) 
+			# I think python defaults to itemwise division
+			qi = qi/norm(qi)
+			Qprime[:,i] = qi
+			Q = block_diag(Q1, Q2)*Qprime
+		return Q,L
+
+main = linspace(-10,10, 5)
+off = linspace(-1,6,4)
+T = MakeTridiagonalMatrix(main, off)
+(Q,L) = dc_eig(T)
+\end{lstlisting}
+\end{center}
+Unfortunately, I am unable to finish this because Python does not have the equivalent of the MATLAB fzero() function. This semester I have found that Python has no fzero() and that there is no routine for animated 3d plotting, as MATLAB has. These are both problems that are waiting to be solved by a motivated person.
 \end{enumerate}
 
 \end{document}

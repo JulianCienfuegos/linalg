@@ -1,6 +1,6 @@
-dim = 50;
+dim = 30;
 A = rand(dim); A = A'*A;
-m=10000;
+m=1000;
 [A,err] = qrplt(A,m);
-err
-plot(1:m, log(err))
+plot(1:(m-1), log(err))
+length(err)

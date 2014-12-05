@@ -23,9 +23,11 @@ function [a, err] = qrplt(a, m)
     plot(e','k'),grid
     title('plot of each diagonal matrix entry during QR iteration')
     shg
-    [~,m] = size(e);
-    err = zeros((m-1), 1); 
-    for col = 1:(m-1)
-        err(col) = norm(e(:,m) - e(:,col))/norm(e(:,m));
+    [~,c] = size(e);
+    err = zeros((c-2), 1); 
+    length(err)
+    for col = 2:(c-1)
+        err(col-1) = norm(e(:,m) - e(:,col))/norm(e(:,m));
     end
+    length(err)
 end
